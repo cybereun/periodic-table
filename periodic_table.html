@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>원소 주기율표</title>
+<style>
+:root {
+  --bg: #f6f7f9; --fg: #16181d; --muted: #5d6471; --card: #ffffff; --line: #d9dde3;
+  --ts: 70%; --tl: 88%; --tb: 42%; --lo: 94%; --hi: 52%;
+  --focus: #1a5fd0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12141a; --fg: #eceef2; --muted: #a0a7b4; --card: #1b1e26; --line: #2f3440;
+    --ts: 40%; --tl: 24%; --tb: 62%; --lo: 18%; --hi: 48%; --focus: #7aa7ff;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12141a; --fg: #eceef2; --muted: #a0a7b4; --card: #1b1e26; --line: #2f3440;
+  --ts: 40%; --tl: 24%; --tb: 62%; --lo: 18%; --hi: 48%; --focus: #7aa7ff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+}
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  max-width: 1600px; margin: 0 auto; padding: 16px 16px 4px;
+}
+h1 { margin: 0; font-size: clamp(20px, 2.2vw, 34px); letter-spacing: -0.02em; }
+header p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+#theme {
+  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer;
+}
+.scroll { overflow-x: auto; padding: 8px 16px 24px; }
+.wrap { max-width: 1600px; margin: 0 auto; min-width: 780px; container-type: inline-size; }
+.table {
+  display: grid; gap: 0.35cqw;
+  grid-template-columns: repeat(18, 1fr);
+  grid-template-rows: auto repeat(7, auto) 1.2cqw auto auto;
+}
+.gl { text-align: center; color: var(--muted); font-size: max(10px, 0.8cqw); }
+.el, .ph {
+  position: relative; aspect-ratio: 1 / 1.1; min-width: 0;
+  border-radius: 0.5cqw; text-align: center;
+}
+.el {
+  --h: 0;
+  background: hsl(var(--h) var(--ts) var(--tl));
+  border: 1px solid hsl(var(--h) 50% var(--tb) / 0.55);
+  color: var(--fg); font: inherit; padding: max(11px, 1.3cqw) 0 0; cursor: pointer; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: transform .12s, box-shadow .12s, opacity .15s;
+}
+.el:hover { transform: scale(1.12); z-index: 3; box-shadow: 0 6px 18px rgb(0 0 0 / .25); }
+.el:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; z-index: 4; }
+.el[aria-pressed="true"] { outline: 3px solid var(--fg); z-index: 4; transform: scale(1.12); }
+.el .n { position: absolute; top: 4%; left: 8%; font-size: max(8px, 0.75cqw); line-height: 1; opacity: .8; }
+.el .s { font-size: max(13px, 1.9cqw); font-weight: 700; line-height: 1; }
+@container (max-width: 1100px) { .el .m { display: none; } }
+.el .k { font-size: max(8px, 0.8cqw); margin-top: 3%; }
+.el .m { font-size: max(7px, 0.62cqw); opacity: .7; margin-top: 2%; }
+.ph {
+  border: 1px dashed var(--line); color: var(--muted);
+  display: flex; align-items: center; justify-content: center; font-size: max(9px, 0.8cqw);
+}
+.el.dim { opacity: .14; }
+.rowlabel {
+  align-self: center; justify-self: end; color: var(--muted);
+  font-size: max(9px, 0.75cqw); padding-right: 4px; text-align: right;
+}
+
+.panel {
+  grid-column: 3 / 13; grid-row: 2 / 5; margin: 0 0.6cqw 0.4cqw;
+  background: var(--card); border: 1px solid var(--line); border-radius: 1cqw;
+  padding: 1cqw 1.6cqw; display: flex; align-items: center; gap: 2cqw; min-width: 0;
+  contain: size; overflow: auto;
+}
+.panel .hint { margin: 0 auto; text-align: center; }
+.panel .hint b { display: block; font-size: max(18px, 2.4cqw); letter-spacing: -0.02em; }
+.panel .hint span { color: var(--muted); font-size: max(11px, 1cqw); }
+.big {
+  --h: 0;
+  flex: none; width: 9cqw; aspect-ratio: 1; border-radius: 1cqw;
+  background: hsl(var(--h) var(--ts) var(--tl)); border: 2px solid hsl(var(--h) 50% var(--tb));
+  display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;
+}
+.big .n { position: absolute; top: 6%; left: 8%; font-size: max(11px, 1.1cqw); }
+.big .s { font-size: max(32px, 5cqw); font-weight: 800; line-height: 1; }
+.big .m { font-size: max(10px, 1cqw); opacity: .75; margin-top: 4%; }
+.info { min-width: 0; flex: 1; }
+.info h2 { margin: 0; font-size: max(20px, 2.5cqw); letter-spacing: -0.02em; }
+.info h2 small { font-size: .55em; color: var(--muted); font-weight: 500; margin-left: .5em; }
+.info dl {
+  display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 0.5cqw 1.2cqw;
+  margin: 0.8cqw 0 0; font-size: max(11px, 1.05cqw);
+}
+.info dt { color: var(--muted); }
+.info dd { margin: 0; font-weight: 600; }
+.info dd.wide { grid-column: span 3; }
+sup { font-size: .7em; line-height: 0; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 1.4cqw; }
+.legend button {
+  --h: 0; display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  border-radius: 999px; padding: 6px 12px; font: inherit; font-size: max(12px, 1cqw); cursor: pointer;
+}
+.legend button i {
+  width: 14px; height: 14px; border-radius: 4px; display: inline-block;
+  background: hsl(var(--h) var(--ts) var(--tl)); border: 1px solid hsl(var(--h) 50% var(--tb));
+}
+.legend button[aria-pressed="true"] { outline: 2px solid var(--fg); }
+.legend button:focus-visible { outline: 3px solid var(--focus); }
+.legend .note { width: 100%; text-align: center; color: var(--muted); font-size: max(11px, .85cqw); }
+
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  max-width: 1600px; margin: 0 auto; padding: 8px 16px 0;
+}
+.toolbar input, .toolbar select {
+  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  border-radius: 10px; padding: 9px 12px; font: inherit; font-size: 14px;
+}
+.toolbar input { flex: 1 1 260px; max-width: 420px; }
+.toolbar label { color: var(--muted); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.toolbar input:focus-visible, .toolbar select:focus-visible { outline: 3px solid var(--focus); }
+.scale { display: flex; align-items: center; gap: 10px; font-size: max(12px, 1cqw); flex-wrap: wrap; justify-content: center; }
+.scale .bar {
+  --h: 0; width: 24cqw; height: 14px; border-radius: 7px; border: 1px solid var(--line);
+  background: linear-gradient(90deg, hsl(var(--h) 75% var(--lo)), hsl(var(--h) 75% var(--hi)));
+}
+.scale em { color: var(--muted); font-style: normal; }
+.btn {
+  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  border-radius: 10px; padding: 9px 14px; font: inherit; font-size: 14px; cursor: pointer;
+}
+.btn[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.btn:focus-visible { outline: 3px solid var(--focus); }
+.toolbar [hidden] { display: none; }
+.el.out { opacity: .12; pointer-events: none; }
+.table.h-k .el .k, .table.h-s .el .s, .table.h-n .el .n { visibility: hidden; }
+.el.right { background: hsl(140 60% 42%) !important; color: #fff; outline: 3px solid hsl(140 70% 25%); z-index: 4; transform: scale(1.12); }
+.el.wrong { background: hsl(0 70% 52%) !important; color: #fff; animation: shake .4s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.qbox { margin: 0 auto; text-align: center; width: 100%; }
+.qbox .qh { color: var(--muted); font-size: max(11px, 1cqw); }
+.qbox .qq { font-size: max(18px, 2.2cqw); font-weight: 700; margin: .6cqw 0; letter-spacing: -0.02em; }
+.qbox .qq b { color: hsl(215 70% 45%); }
+.qbox .qf { min-height: 1.6em; font-size: max(12px, 1.1cqw); }
+.qbox .qb { display: flex; gap: 8px; justify-content: center; margin-top: .6cqw; }
+@media (max-width: 780px) { header { padding-top: 12px; } }
+@media (prefers-reduced-motion: reduce) { .el { transition: none; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>원소 주기율표</h1>
+    <p>원소를 클릭하거나 방향키로 이동하세요 · Esc로 선택 해제</p>
+  </div>
+  <button id="theme" type="button" aria-label="화면 테마 전환">🌓 테마</button>
+</header>
+
+<div class="toolbar">
+  <input id="search" type="search" placeholder="검색: 이름, 기호, 원자번호 (예: 철, Fe, 26)" aria-label="원소 검색" autocomplete="off">
+  <label>색상 기준
+    <select id="mode">
+      <option value="cat">분류</option>
+      <option value="state">상태 (25°C)</option>
+      <option value="eneg">전기음성도</option>
+      <option value="mass">원자량</option>
+    </select>
+  </label>
+  <button id="quizBtn" class="btn" type="button" aria-pressed="false">🎯 퀴즈</button>
+  <label id="qrangeWrap" hidden>범위
+    <select id="qrange">
+      <option value="20">1–20번</option>
+      <option value="36">1–36번</option>
+      <option value="54">1–54번</option>
+      <option value="118">전체</option>
+    </select>
+  </label>
+  <button id="fitBtn" class="btn" type="button" aria-pressed="true">한 화면 맞춤</button>
+  <button id="fsBtn" class="btn" type="button">전체화면</button>
+</div>
+
+<div class="scroll">
+  <div class="wrap">
+    <div class="table" id="table"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+
+<script>
+// [번호, 기호, 한글, 영문, 원자량, 분류, 상태(25°C), 전자배치, 전기음성도(폴링)]
+const D = [
+[1,'H','수소','Hydrogen',1.008,'nonmetal','gas','1s1',2.20],
+[2,'He','헬륨','Helium',4.0026,'noble','gas','1s2',null],
+[3,'Li','리튬','Lithium',6.94,'alkali','solid','[He] 2s1',0.98],
+[4,'Be','베릴륨','Beryllium',9.0122,'alkaline','solid','[He] 2s2',1.57],
+[5,'B','붕소','Boron',10.81,'metalloid','solid','[He] 2s2 2p1',2.04],
+[6,'C','탄소','Carbon',12.011,'nonmetal','solid','[He] 2s2 2p2',2.55],
+[7,'N','질소','Nitrogen',14.007,'nonmetal','gas','[He] 2s2 2p3',3.04],
+[8,'O','산소','Oxygen',15.999,'nonmetal','gas','[He] 2s2 2p4',3.44],
+[9,'F','플루오린','Fluorine',18.998,'halogen','gas','[He] 2s2 2p5',3.98],
+[10,'Ne','네온','Neon',20.180,'noble','gas','[He] 2s2 2p6',null],
+[11,'Na','나트륨','Sodium',22.990,'alkali','solid','[Ne] 3s1',0.93],
+[12,'Mg','마그네슘','Magnesium',24.305,'alkaline','solid','[Ne] 3s2',1.31],
+[13,'Al','알루미늄','Aluminium',26.982,'post','solid','[Ne] 3s2 3p1',1.61],
+[14,'Si','규소','Silicon',28.085,'metalloid','solid','[Ne] 3s2 3p2',1.90],
+[15,'P','인','Phosphorus',30.974,'nonmetal','solid','[Ne] 3s2 3p3',2.19],
+[16,'S','황','Sulfur',32.06,'nonmetal','solid','[Ne] 3s2 3p4',2.58],
+[17,'Cl','염소','Chlorine',35.45,'halogen','gas','[Ne] 3s2 3p5',3.16],
+[18,'Ar','아르곤','Argon',39.948,'noble','gas','[Ne] 3s2 3p6',null],
+[19,'K','칼륨','Potassium',39.098,'alkali','solid','[Ar] 4s1',0.82],
+[20,'Ca','칼슘','Calcium',40.078,'alkaline','solid','[Ar] 4s2',1.00],
+[21,'Sc','스칸듐','Scandium',44.956,'transition','solid','[Ar] 3d1 4s2',1.36],
+[22,'Ti','타이타늄','Titanium',47.867,'transition','solid','[Ar] 3d2 4s2',1.54],
+[23,'V','바나듐','Vanadium',50.942,'transition','solid','[Ar] 3d3 4s2',1.63],
+[24,'Cr','크로뮴','Chromium',51.996,'transition','solid','[Ar] 3d5 4s1',1.66],
+[25,'Mn','망가니즈','Manganese',54.938,'transition','solid','[Ar] 3d5 4s2',1.55],
+[26,'Fe','철','Iron',55.845,'transition','solid','[Ar] 3d6 4s2',1.83],
+[27,'Co','코발트','Cobalt',58.933,'transition','solid','[Ar] 3d7 4s2',1.88],
+[28,'Ni','니켈','Nickel',58.693,'transition','solid','[Ar] 3d8 4s2',1.91],
+[29,'Cu','구리','Copper',63.546,'transition','solid','[Ar] 3d10 4s1',1.90],
+[30,'Zn','아연','Zinc',65.38,'transition','solid','[Ar] 3d10 4s2',1.65],
+[31,'Ga','갈륨','Gallium',69.723,'post','solid','[Ar] 3d10 4s2 4p1',1.81],
+[32,'Ge','저마늄','Germanium',72.630,'metalloid','solid','[Ar] 3d10 4s2 4p2',2.01],
+[33,'As','비소','Arsenic',74.922,'metalloid','solid','[Ar] 3d10 4s2 4p3',2.18],
+[34,'Se','셀레늄','Selenium',78.971,'nonmetal','solid','[Ar] 3d10 4s2 4p4',2.55],
+[35,'Br','브로민','Bromine',79.904,'halogen','liquid','[Ar] 3d10 4s2 4p5',2.96],
+[36,'Kr','크립톤','Krypton',83.798,'noble','gas','[Ar] 3d10 4s2 4p6',3.00],
+[37,'Rb','루비듐','Rubidium',85.468,'alkali','solid','[Kr] 5s1',0.82],
+[38,'Sr','스트론튬','Strontium',87.62,'alkaline','solid','[Kr] 5s2',0.95],
+[39,'Y','이트륨','Yttrium',88.906,'transition','solid','[Kr] 4d1 5s2',1.22],
+[40,'Zr','지르코늄','Zirconium',91.224,'transition','solid','[Kr] 4d2 5s2',1.33],
+[41,'Nb','나이오븀','Niobium',92.906,'transition','solid','[Kr] 4d4 5s1',1.6],
+[42,'Mo','몰리브데넘','Molybdenum',95.95,'transition','solid','[Kr] 4d5 5s1',2.16],
+[43,'Tc','테크네튬','Technetium',98,'transition','solid','[Kr] 4d5 5s2',1.9],
+[44,'Ru','루테늄','Ruthenium',101.07,'transition','solid','[Kr] 4d7 5s1',2.2],
+[45,'Rh','로듐','Rhodium',102.91,'transition','solid','[Kr] 4d8 5s1',2.28],
+[46,'Pd','팔라듐','Palladium',106.42,'transition','solid','[Kr] 4d10',2.20],
+[47,'Ag','은','Silver',107.87,'transition','solid','[Kr] 4d10 5s1',1.93],
+[48,'Cd','카드뮴','Cadmium',112.41,'transition','solid','[Kr] 4d10 5s2',1.69],
+[49,'In','인듐','Indium',114.82,'post','solid','[Kr] 4d10 5s2 5p1',1.78],
+[50,'Sn','주석','Tin',118.71,'post','solid','[Kr] 4d10 5s2 5p2',1.96],
+[51,'Sb','안티모니','Antimony',121.76,'metalloid','solid','[Kr] 4d10 5s2 5p3',2.05],
+[52,'Te','텔루륨','Tellurium',127.60,'metalloid','solid','[Kr] 4d10 5s2 5p4',2.1],
+[53,'I','아이오딘','Iodine',126.90,'halogen','solid','[Kr] 4d10 5s2 5p5',2.66],
+[54,'Xe','제논','Xenon',131.29,'noble','gas','[Kr] 4d10 5s2 5p6',2.6],
+[55,'Cs','세슘','Caesium',132.91,'alkali','solid','[Xe] 6s1',0.79],
+[56,'Ba','바륨','Barium',137.33,'alkaline','solid','[Xe] 6s2',0.89],
+[57,'La','란타넘','Lanthanum',138.91,'lanthanide','solid','[Xe] 5d1 6s2',1.10],
+[58,'Ce','세륨','Cerium',140.12,'lanthanide','solid','[Xe] 4f1 5d1 6s2',1.12],
+[59,'Pr','프라세오디뮴','Praseodymium',140.91,'lanthanide','solid','[Xe] 4f3 6s2',1.13],
+[60,'Nd','네오디뮴','Neodymium',144.24,'lanthanide','solid','[Xe] 4f4 6s2',1.14],
+[61,'Pm','프로메튬','Promethium',145,'lanthanide','solid','[Xe] 4f5 6s2',null],
+[62,'Sm','사마륨','Samarium',150.36,'lanthanide','solid','[Xe] 4f6 6s2',1.17],
+[63,'Eu','유로퓸','Europium',151.96,'lanthanide','solid','[Xe] 4f7 6s2',null],
+[64,'Gd','가돌리늄','Gadolinium',157.25,'lanthanide','solid','[Xe] 4f7 5d1 6s2',1.20],
+[65,'Tb','터븀','Terbium',158.93,'lanthanide','solid','[Xe] 4f9 6s2',null],
+[66,'Dy','디스프로슘','Dysprosium',162.50,'lanthanide','solid','[Xe] 4f10 6s2',1.22],
+[67,'Ho','홀뮴','Holmium',164.93,'lanthanide','solid','[Xe] 4f11 6s2',1.23],
+[68,'Er','어븀','Erbium',167.26,'lanthanide','solid','[Xe] 4f12 6s2',1.24],
+[69,'Tm','툴륨','Thulium',168.93,'lanthanide','solid','[Xe] 4f13 6s2',1.25],
+[70,'Yb','이터븀','Ytterbium',173.05,'lanthanide','solid','[Xe] 4f14 6s2',null],
+[71,'Lu','루테튬','Lutetium',174.97,'lanthanide','solid','[Xe] 4f14 5d1 6s2',1.27],
+[72,'Hf','하프늄','Hafnium',178.49,'transition','solid','[Xe] 4f14 5d2 6s2',1.3],
+[73,'Ta','탄탈럼','Tantalum',180.95,'transition','solid','[Xe] 4f14 5d3 6s2',1.5],
+[74,'W','텅스텐','Tungsten',183.84,'transition','solid','[Xe] 4f14 5d4 6s2',2.36],
+[75,'Re','레늄','Rhenium',186.21,'transition','solid','[Xe] 4f14 5d5 6s2',1.9],
+[76,'Os','오스뮴','Osmium',190.23,'transition','solid','[Xe] 4f14 5d6 6s2',2.2],
+[77,'Ir','이리듐','Iridium',192.22,'transition','solid','[Xe] 4f14 5d7 6s2',2.20],
+[78,'Pt','백금','Platinum',195.08,'transition','solid','[Xe] 4f14 5d9 6s1',2.28],
+[79,'Au','금','Gold',196.97,'transition','solid','[Xe] 4f14 5d10 6s1',2.54],
+[80,'Hg','수은','Mercury',200.59,'transition','liquid','[Xe] 4f14 5d10 6s2',2.00],
+[81,'Tl','탈륨','Thallium',204.38,'post','solid','[Xe] 4f14 5d10 6s2 6p1',1.62],
+[82,'Pb','납','Lead',207.2,'post','solid','[Xe] 4f14 5d10 6s2 6p2',2.33],
+[83,'Bi','비스무트','Bismuth',208.98,'post','solid','[Xe] 4f14 5d10 6s2 6p3',2.02],
+[84,'Po','폴로늄','Polonium',209,'post','solid','[Xe] 4f14 5d10 6s2 6p4',2.0],
+[85,'At','아스타틴','Astatine',210,'halogen','solid','[Xe] 4f14 5d10 6s2 6p5',2.2],
+[86,'Rn','라돈','Radon',222,'noble','gas','[Xe] 4f14 5d10 6s2 6p6',null],
+[87,'Fr','프랑슘','Francium',223,'alkali','unknown','[Rn] 7s1',0.7],
+[88,'Ra','라듐','Radium',226,'alkaline','solid','[Rn] 7s2',0.9],
+[89,'Ac','악티늄','Actinium',227,'actinide','solid','[Rn] 6d1 7s2',1.1],
+[90,'Th','토륨','Thorium',232.04,'actinide','solid','[Rn] 6d2 7s2',1.3],
+[91,'Pa','프로트악티늄','Protactinium',231.04,'actinide','solid','[Rn] 5f2 6d1 7s2',1.5],
+[92,'U','우라늄','Uranium',238.03,'actinide','solid','[Rn] 5f3 6d1 7s2',1.38],
+[93,'Np','넵투늄','Neptunium',237,'actinide','solid','[Rn] 5f4 6d1 7s2',1.36],
+[94,'Pu','플루토늄','Plutonium',244,'actinide','solid','[Rn] 5f6 7s2',1.28],
+[95,'Am','아메리슘','Americium',243,'actinide','solid','[Rn] 5f7 7s2',1.3],
+[96,'Cm','퀴륨','Curium',247,'actinide','solid','[Rn] 5f7 6d1 7s2',1.3],
+[97,'Bk','버클륨','Berkelium',247,'actinide','solid','[Rn] 5f9 7s2',1.3],
+[98,'Cf','캘리포늄','Californium',251,'actinide','solid','[Rn] 5f10 7s2',1.3],
+[99,'Es','아인슈타이늄','Einsteinium',252,'actinide','unknown','[Rn] 5f11 7s2',1.3],
+[100,'Fm','페르뮴','Fermium',257,'actinide','unknown','[Rn] 5f12 7s2',1.3],
+[101,'Md','멘델레븀','Mendelevium',258,'actinide','unknown','[Rn] 5f13 7s2',1.3],
+[102,'No','노벨륨','Nobelium',259,'actinide','unknown','[Rn] 5f14 7s2',1.3],
+[103,'Lr','로렌슘','Lawrencium',266,'actinide','unknown','[Rn] 5f14 7s2 7p1',null],
+[104,'Rf','러더포듐','Rutherfordium',267,'transition','unknown','[Rn] 5f14 6d2 7s2',null],
+[105,'Db','더브늄','Dubnium',268,'transition','unknown','[Rn] 5f14 6d3 7s2',null],
+[106,'Sg','시보귬','Seaborgium',269,'transition','unknown','[Rn] 5f14 6d4 7s2',null],
+[107,'Bh','보륨','Bohrium',270,'transition','unknown','[Rn] 5f14 6d5 7s2',null],
+[108,'Hs','하슘','Hassium',277,'transition','unknown','[Rn] 5f14 6d6 7s2',null],
+[109,'Mt','마이트너륨','Meitnerium',278,'unknown','unknown','[Rn] 5f14 6d7 7s2',null],
+[110,'Ds','다름슈타튬','Darmstadtium',281,'unknown','unknown','[Rn] 5f14 6d8 7s2',null],
+[111,'Rg','뢴트게늄','Roentgenium',282,'unknown','unknown','[Rn] 5f14 6d9 7s2',null],
+[112,'Cn','코페르니슘','Copernicium',285,'unknown','unknown','[Rn] 5f14 6d10 7s2',null],
+[113,'Nh','니호늄','Nihonium',286,'unknown','unknown','[Rn] 5f14 6d10 7s2 7p1',null],
+[114,'Fl','플레로븀','Flerovium',289,'unknown','unknown','[Rn] 5f14 6d10 7s2 7p2',null],
+[115,'Mc','모스코븀','Moscovium',290,'unknown','unknown','[Rn] 5f14 6d10 7s2 7p3',null],
+[116,'Lv','리버모륨','Livermorium',293,'unknown','unknown','[Rn] 5f14 6d10 7s2 7p4',null],
+[117,'Ts','테네신','Tennessine',294,'unknown','unknown','[Rn] 5f14 6d10 7s2 7p5',null],
+[118,'Og','오가네손','Oganesson',294,'unknown','unknown','[Rn] 5f14 6d10 7s2 7p6',null]
+];
+
+const CAT = {
+  alkali:     ['알칼리 금속', 355],
+  alkaline:   ['알칼리 토금속', 25],
+  transition: ['전이 금속', 215],
+  post:       ['전이후 금속', 190],
+  metalloid:  ['준금속', 55],
+  nonmetal:   ['비금속', 120],
+  halogen:    ['할로젠', 160],
+  noble:      ['비활성 기체', 260],
+  lanthanide: ['란타넘족', 300],
+  actinide:   ['악티늄족', 330],
+  unknown:    ['성질 미확인', 0]
+};
+// 주요 용도·특징 (번호 순)
+const USES = [
+'우주에서 가장 풍부한 원소, 수소 연료·암모니아 합성',
+'풍선, 극저온 냉각(MRI), 잠수용 호흡 기체',
+'스마트폰·전기차 배터리',
+'항공우주용 합금, X선 투과 창',
+'내열유리, 세제, 비료',
+'생명체의 뼈대, 연필심(흑연), 다이아몬드',
+'비료, 대기의 78%, 액체질소 냉각',
+'호흡과 연소, 물의 구성 원소',
+'치약(불소), 테플론 코팅, 냉매',
+'네온사인',
+'소금(NaCl), 비누, 나트륨 가로등',
+'가벼운 합금, 엽록소, 폭죽',
+'음료 캔, 포일, 항공기 소재',
+'반도체, 태양전지, 유리',
+'비료, 성냥, DNA와 ATP의 구성 성분',
+'고무 가황, 황산, 화약',
+'수돗물 소독, PVC, 표백제',
+'전구 충전 기체, 용접 보호 기체',
+'비료, 신경과 근육 기능',
+'뼈와 치아, 시멘트, 석회',
+'경량 합금, 경기장 조명',
+'가볍고 강한 소재, 인공 관절·임플란트',
+'강철 강화 합금, 공구강',
+'도금, 스테인리스강',
+'강철 제조, 건전지',
+'철강, 건축·자동차, 혈액 속 헤모글로빈',
+'배터리, 푸른 안료, 합금',
+'동전, 스테인리스강, 배터리',
+'전선, 동전, 청동기',
+'아연 도금, 건전지, 황동',
+'LED, 손의 체온에 녹는 금속',
+'광섬유, 초기 트랜지스터',
+'목재 방부제, 반도체(GaAs), 독성이 강함',
+'복사기 드럼, 태양전지, 필수 미량 원소',
+'난연제, 사진 필름, 상온에서 액체인 비금속',
+'고성능 전구, 레이저',
+'원자시계, 광전지',
+'붉은색 불꽃놀이',
+'LED 형광체, 레이저',
+'원자로 연료 피복, 인조 보석',
+'초전도 자석, 특수 강철',
+'고강도 강철, 윤활제',
+'의료 영상 진단, 최초의 인공 원소',
+'전자 접점, 촉매',
+'자동차 촉매 변환기',
+'촉매 변환기, 전자 부품',
+'장신구, 거울, 항균, 우수한 전도체',
+'니켈-카드뮴 전지, 독성이 강함',
+'터치스크린(ITO), 땜납',
+'통조림 도금, 땜납, 청동',
+'난연제, 납 합금 경화',
+'태양전지(CdTe), 열전 소자',
+'소독약, 갑상선 호르몬 재료, 소금 첨가',
+'자동차 전조등, 이온 엔진',
+'원자시계(1초의 정의)',
+'X선 조영제, 녹색 불꽃',
+'카메라 렌즈, 수소 저장 합금',
+'촉매, 유리 연마제, 라이터 부싯돌',
+'황록색 유리·세라믹 안료, 자석',
+'강력한 영구 자석(전기차 모터)',
+'야광 도료, 원자력 전지(방사성)',
+'영구 자석, 원자로 제어',
+'형광체(TV, 지폐 위조 방지)',
+'MRI 조영제, 중성자 흡수',
+'녹색 형광체, 자석 첨가',
+'자석의 내열성 강화',
+'레이저, 강한 자기장 생성',
+'광섬유 증폭기, 분홍색 유리',
+'휴대용 X선 장치',
+'원자시계, 레이저',
+'PET 검출기, 석유 정제 촉매',
+'원자로 제어봉, 반도체 소자',
+'스마트폰 커패시터, 수술 기구',
+'전구 필라멘트, 금속 중 가장 높은 녹는점',
+'제트 엔진 합금',
+'밀도가 가장 높은 원소, 만년필 촉',
+'점화 플러그, 내부식 합금',
+'촉매, 장신구',
+'장신구, 전자 회로, 안전 자산',
+'온도계, 형광등, 상온에서 액체인 금속(독성)',
+'특수 광학 유리, 독성이 강함',
+'자동차 배터리, 방사선 차폐, 독성',
+'위장약, 낮은 녹는점의 합금',
+'정전기 제거, 방사성 (퀴리 부부가 발견)',
+'암 치료 연구, 지구상에서 가장 드문 원소',
+'방사성 기체, 실내 라돈 측정 대상',
+'가장 불안정한 천연 원소',
+'과거 야광 시계, 방사선 치료 (퀴리 부부가 발견)',
+'암 표적 치료 연구',
+'가스등 맨틀, 원자력 연료 연구',
+'우라늄 붕괴 계열의 중간 산물, 연구용',
+'원자력 발전 연료',
+'우라늄 붕괴 산물, 연구용',
+'핵무기, 우주 탐사선 전원',
+'연기 감지기',
+'우주 탐사선 전원 연구',
+'초우라늄 원소 합성 재료',
+'중성자원, 금·석유 탐사',
+'수소폭탄 잔해에서 발견, 연구용',
+'수소폭탄 잔해에서 발견, 연구용',
+'극미량만 합성, 연구용',
+'극미량만 합성, 연구용',
+'극미량만 합성, 연구용',
+'입자가속기로 합성, 이름은 러더퍼드에서 유래',
+'입자가속기로 합성, 이름은 러시아 두브나에서 유래',
+'입자가속기로 합성, 이름은 시보그에서 유래',
+'입자가속기로 합성, 이름은 보어에서 유래',
+'입자가속기로 합성, 이름은 독일 헤센 주에서 유래',
+'입자가속기로 합성, 이름은 마이트너에서 유래',
+'입자가속기로 합성, 이름은 독일 다름슈타트에서 유래',
+'입자가속기로 합성, 이름은 뢴트겐에서 유래',
+'입자가속기로 합성, 이름은 코페르니쿠스에서 유래',
+'아시아 최초로 발견된 원소, 일본 이름(니혼)에서 유래',
+'입자가속기로 합성, 이름은 플레로프 연구소에서 유래',
+'입자가속기로 합성, 이름은 모스크바에서 유래',
+'입자가속기로 합성, 이름은 리버모어 연구소에서 유래',
+'입자가속기로 합성, 이름은 미국 테네시 주에서 유래',
+'입자가속기로 합성, 이름은 오가네시안에서 유래'
+];
+const quizUse = e => e[0] <= 103 && !/연구용|극미량/.test(USES[e[0] - 1]);
+const STATE = { solid: '고체', liquid: '액체', gas: '기체', unknown: '미확인' };
+// 안정 동위원소가 없는 원소는 원자량을 [ ]로 표기
+const UNSTABLE = new Set([43, 61, ...Array.from({length: 6}, (_, i) => 84 + i), ...Array.from({length: 26}, (_, i) => 93 + i)]);
+UNSTABLE.add(84); UNSTABLE.add(85); UNSTABLE.add(86); UNSTABLE.add(87); UNSTABLE.add(88); UNSTABLE.add(89);
+
+// 표 안에서의 위치 → [열, 행(주기)]. 란타넘족/악티늄족은 아래 별도 행(9, 10)
+function place(n) {
+  if (n === 1) return { col: 1, row: 1 };
+  if (n === 2) return { col: 18, row: 1 };
+  const bounds = [[3,2],[11,3],[19,4],[37,5],[55,6],[87,7]];
+  let start = 3, period = 2;
+  for (const [s, p] of bounds) if (n >= s) { start = s; period = p; }
+  const idx = n - start;
+  if (period <= 3) return { col: idx < 2 ? idx + 1 : idx + 11, row: period };
+  if (period <= 5) return { col: idx + 1, row: period };
+  if (idx < 2) return { col: idx + 1, row: period };
+  if (n >= 57 && n <= 71) return { col: n - 57 + 3, row: 9 };
+  if (n >= 89 && n <= 103) return { col: n - 89 + 3, row: 10 };
+  return { col: idx - 13, row: period };
+}
+
+const sup = s => s.replace(/(\d[spdf])(\d+)/g, '$1<sup>$2</sup>');
+const massText = e => (UNSTABLE.has(e[0]) ? '[' + e[4] + ']' : String(e[4]));
+const GRID_ROW = r => (r <= 7 ? r + 1 : r + 2); // 1행은 족 번호, 8행 뒤 간격 1줄
+
+const table = document.getElementById('table');
+const panel = document.createElement('div');
+panel.className = 'panel';
+panel.setAttribute('aria-live', 'polite');
+table.appendChild(panel);
+
+for (let g = 1; g <= 18; g++) {
+  const d = document.createElement('div');
+  d.className = 'gl'; d.textContent = g; d.style.gridColumn = g; d.style.gridRow = 1;
+  table.appendChild(d);
+}
+function ph(text, col, row) {
+  const d = document.createElement('div');
+  d.className = 'ph'; d.textContent = text; d.style.gridColumn = col; d.style.gridRow = GRID_ROW(row);
+  table.appendChild(d);
+}
+ph('57–71', 3, 6); ph('89–103', 3, 7);
+function rowLabel(text, row) {
+  const d = document.createElement('div');
+  d.className = 'rowlabel'; d.textContent = text;
+  d.style.gridColumn = '1 / 3'; d.style.gridRow = GRID_ROW(row);
+  table.appendChild(d);
+}
+rowLabel('란타넘족', 9); rowLabel('악티늄족', 10);
+
+const tiles = new Map(); // "col,row" -> button
+let selected = null;
+
+for (const e of D) {
+  const [n, sym, ko] = e;
+  const { col, row } = place(n);
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'el';
+  b.dataset.cat = e[5];
+  b.style.setProperty('--h', CAT[e[5]][1]);
+  if (e[5] === 'unknown') b.style.setProperty('--ts', '0%');
+  b.style.gridColumn = col; b.style.gridRow = GRID_ROW(row);
+  b.setAttribute('aria-pressed', 'false');
+  b.setAttribute('aria-label', `${n}번 ${ko} ${sym}`);
+  b.innerHTML = `<span class="n">${n}</span><span class="s">${sym}</span><span class="k">${ko}</span><span class="m">${massText(e)}</span>`;
+  b.addEventListener('click', () => (quiz ? answer(n) : select(n)));
+  b.dataset.col = col; b.dataset.row = row; b.dataset.n = n;
+  tiles.set(col + ',' + row, b);
+  table.appendChild(b);
+}
+
+function groupText(n) {
+  if (n >= 57 && n <= 71) return '란타넘족 (f-블록)';
+  if (n >= 89 && n <= 103) return '악티늄족 (f-블록)';
+  return place(n).col + '족';
+}
+function showHint() {
+  panel.innerHTML = '<div class="hint"><b>원소를 선택해 보세요</b><span>118개 원소의 이름, 원자량, 전자배치를 확인할 수 있습니다</span></div>';
+}
+function select(n) {
+  if (quiz) return;
+  const e = D[n - 1];
+  if (selected) tiles.get(place(selected).col + ',' + place(selected).row).setAttribute('aria-pressed', 'false');
+  selected = n;
+  const t = tiles.get(place(n).col + ',' + place(n).row);
+  t.setAttribute('aria-pressed', 'true');
+  const h = CAT[e[5]][1];
+  panel.innerHTML = `
+    <div class="big" style="--h:${h}${e[5] === 'unknown' ? ';--ts:0%' : ''}">
+      <span class="n">${n}</span><span class="s">${e[1]}</span><span class="m">${massText(e)}</span>
+    </div>
+    <div class="info">
+      <h2>${e[2]}<small>${e[3]}</small></h2>
+      <dl>
+        <dt>원자번호</dt><dd>${n}</dd>
+        <dt>원자량</dt><dd>${massText(e)}</dd>
+        <dt>분류</dt><dd>${CAT[e[5]][0]}</dd>
+        <dt>상태(25°C)</dt><dd>${STATE[e[6]]}</dd>
+        <dt>족 / 주기</dt><dd>${groupText(n)} / ${n <= 2 ? 1 : place(n).row === 9 ? 6 : place(n).row === 10 ? 7 : place(n).row}주기</dd>
+        <dt>전기음성도</dt><dd>${e[8] == null ? '—' : e[8]}</dd>
+        <dt>전자배치</dt><dd class="wide">${sup(e[7])}</dd>
+        <dt>주요 용도</dt><dd class="wide">${USES[n - 1]}</dd>
+      </dl>
+    </div>`;
+}
+function clear() {
+  if (quiz) return;
+  if (selected) tiles.get(place(selected).col + ',' + place(selected).row).setAttribute('aria-pressed', 'false');
+  selected = null; showHint();
+}
+showHint();
+
+// 방향키 이동
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape') { clear(); return; }
+  const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  const d = dirs[ev.key];
+  if (!d) return;
+  const cur = document.activeElement && document.activeElement.classList.contains('el') ? document.activeElement : null;
+  if (!cur) return;
+  ev.preventDefault();
+  let c = +cur.dataset.col, r = +cur.dataset.row;
+  for (let i = 0; i < 18; i++) {
+    c += d[0]; r += d[1];
+    if (c < 1 || c > 18 || r < 1 || r > 10) return;
+    const next = tiles.get(c + ',' + r);
+    if (next) { next.focus(); if (!quiz) select(+next.dataset.n); return; }
+  }
+});
+
+// 범례: 클릭하면 해당 분류만 강조
+const legend = document.getElementById('legend');
+const search = document.getElementById('search');
+const modeSel = document.getElementById('mode');
+const STATE_HUE = { solid: 215, liquid: 160, gas: 25, unknown: 0 };
+// 연속값 모드: 값 → 0~1
+const SCALES = {
+  eneg: { hue: 20, label: '전기음성도', min: 0.7, max: 3.98, f: e => e[8], t: v => (v - 0.7) / (3.98 - 0.7) },
+  mass: { hue: 285, label: '원자량', min: 1, max: 294, f: e => e[4], t: v => Math.sqrt(v / 294) }
+};
+const wrap = document.querySelector('.wrap');
+const scroller = document.querySelector('.scroll');
+let fitOn = true, quiz = null;
+let mode = 'cat', legendKey = null;
+
+function paint() {
+  for (const e of D) {
+    const t = tiles.get(place(e[0]).col + ',' + place(e[0]).row);
+    let key, h, gray = false, tl = null;
+    if (mode === 'cat') { key = e[5]; h = CAT[key][1]; gray = key === 'unknown'; }
+    else if (mode === 'state') { key = e[6]; h = STATE_HUE[key]; gray = key === 'unknown'; }
+    else {
+      const s = SCALES[mode], v = s.f(e);
+      key = null; h = s.hue;
+      if (v == null) gray = true;
+      else tl = `calc(var(--lo) + (var(--hi) - var(--lo)) * ${Math.min(1, Math.max(0, s.t(v))).toFixed(3)})`;
+    }
+    t.dataset.key = key || '';
+    t.style.setProperty('--h', h);
+    t.style.setProperty('--ts', gray ? '0%' : mode === 'cat' || mode === 'state' ? '' : '75%');
+    if (!t.style.getPropertyValue('--ts')) t.style.removeProperty('--ts');
+    if (tl) t.style.setProperty('--tl', tl); else t.style.removeProperty('--tl');
+  }
+  buildLegend();
+  applyFilter();
+  applyFit();
+}
+
+function buildLegend() {
+  legend.innerHTML = '';
+  legendKey = null;
+  if (mode === 'cat' || mode === 'state') {
+    const items = mode === 'cat'
+      ? Object.entries(CAT).map(([k, [l, h]]) => [k, l, h])
+      : Object.entries(STATE).map(([k, l]) => [k, l, STATE_HUE[k]]);
+    for (const [key, label, h] of items) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.style.setProperty('--h', h);
+      if (key === 'unknown') b.style.setProperty('--ts', '0%');
+      b.innerHTML = `<i></i>${label}`;
+      b.addEventListener('click', () => {
+        legendKey = legendKey === key ? null : key;
+        legend.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+        if (legendKey) b.setAttribute('aria-pressed', 'true');
+        applyFilter();
+      });
+      legend.appendChild(b);
+    }
+  } else {
+    const s = SCALES[mode];
+    const bar = document.createElement('div');
+    bar.className = 'scale';
+    bar.style.setProperty('--h', s.hue);
+    bar.innerHTML = `<span>${s.min}</span><div class="bar"></div><span>${s.max}</span><em>${s.label}${mode === 'mass' ? ' (제곱근 눈금)' : ''} · 회색은 값 없음</em>`;
+    legend.appendChild(bar);
+  }
+  const note = document.createElement('div');
+  note.className = 'note';
+  note.textContent = '[ ] 안의 값은 안정 동위원소가 없는 원소의 대표 질량수 · 109번 이후 원소의 성질은 예측값 · 전기음성도는 폴링 값';
+  legend.appendChild(note);
+}
+
+function applyFilter() {
+  const q = search.value.trim().toLowerCase();
+  tiles.forEach(t => {
+    const e = D[+t.dataset.n - 1];
+    const okQ = !q || String(e[0]) === q || e[1].toLowerCase().startsWith(q) ||
+                e[2].includes(q) || e[3].toLowerCase().includes(q);
+    const okL = !legendKey || t.dataset.key === legendKey;
+    t.classList.toggle('dim', !(okQ && okL));
+  });
+}
+search.addEventListener('input', applyFilter);
+search.addEventListener('keydown', ev => {
+  if (ev.key === 'Enter') {
+    const first = [...tiles.values()].find(t => !t.classList.contains('dim'));
+    if (first && search.value.trim()) { first.focus(); select(+first.dataset.n); }
+  } else if (ev.key === 'Escape') { search.value = ''; applyFilter(); }
+  ev.stopPropagation();
+});
+modeSel.addEventListener('change', () => { mode = modeSel.value; paint(); });
+paint();
+
+// ---- 한 화면 맞춤 ----
+function applyFit() {
+  wrap.style.width = '';
+  if (!fitOn) return;
+  window.scrollTo(0, 0);
+  for (let i = 0; i < 3; i++) {
+    const r = wrap.getBoundingClientRect();
+    const availH = innerHeight - r.top - 40;
+    if (Math.abs(r.height - availH) < 2 || (r.height < availH && i === 0)) break;
+    wrap.style.width = Math.max(780, Math.floor(r.width * availH / r.height)) + 'px';
+  }
+}
+document.getElementById('fitBtn').addEventListener('click', ev => {
+  fitOn = !fitOn;
+  ev.currentTarget.setAttribute('aria-pressed', String(fitOn));
+  applyFit();
+});
+document.getElementById('fsBtn').addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+});
+addEventListener('resize', applyFit);
+
+// ---- 퀴즈 ----
+const quizBtn = document.getElementById('quizBtn');
+const qrange = document.getElementById('qrange');
+const qrangeWrap = document.getElementById('qrangeWrap');
+let qTimer = null;
+const TOTAL_Q = 10;
+
+function setHide(h) {
+  table.classList.remove('h-k', 'h-s', 'h-n');
+  h.forEach(x => table.classList.add('h-' + x));
+}
+function clearMarks() { tiles.forEach(t => t.classList.remove('right', 'wrong')); }
+function startQuiz() {
+  clearTimeout(qTimer);
+  if (selected) tiles.get(place(selected).col + ',' + place(selected).row).setAttribute('aria-pressed', 'false');
+  selected = null;
+  const range = +qrange.value;
+  quiz = { range, i: 0, score: 0, tries: 0, ans: null, type: null, locked: false, last: 0, fb: '' };
+  tiles.forEach(t => t.classList.toggle('out', +t.dataset.n > range));
+  nextQ();
+}
+function endQuiz() {
+  clearTimeout(qTimer);
+  quiz = null;
+  setHide([]); clearMarks();
+  tiles.forEach(t => t.classList.remove('out'));
+  quizBtn.setAttribute('aria-pressed', 'false');
+  qrangeWrap.hidden = true;
+  showHint(); applyFit();
+}
+function nextQ() {
+  clearMarks();
+  if (quiz.i >= TOTAL_Q) { renderQuiz(true); setHide([]); return; }
+  const pool = D.filter(e => e[0] <= quiz.range && e[0] !== quiz.last);
+  const e = pool[Math.floor(Math.random() * pool.length)];
+  const types = ['name', 'sym', 'num'];
+  if (quizUse(e)) types.push('use', 'use');
+  quiz.type = types[Math.floor(Math.random() * types.length)];
+  quiz.ans = e[0]; quiz.last = e[0]; quiz.tries = 0; quiz.locked = false; quiz.fb = '';
+  setHide({ name: ['k'], sym: ['s'], num: ['n'], use: ['k', 's'] }[quiz.type]);
+  renderQuiz(false);
+}
+function questionHTML() {
+  const e = D[quiz.ans - 1];
+  switch (quiz.type) {
+    case 'name': return `<b>${e[2]}</b> 원소를 찾아 클릭하세요`;
+    case 'sym': return `기호 <b>${e[1]}</b> 의 원소를 찾아 클릭하세요`;
+    case 'num': return `원자번호 <b>${e[0]}번</b> 원소를 찾아 클릭하세요`;
+    default: return `“${USES[e[0] - 1].replaceAll(e[2], '○')}” <br>이런 용도의 원소는?`;
+  }
+}
+function renderQuiz(finished) {
+  if (finished) {
+    panel.innerHTML = `<div class="qbox"><div class="qh">퀴즈 결과 (첫 시도 정답 기준)</div>
+      <div class="qq"><b>${quiz.score}</b> / ${TOTAL_Q}</div>
+      <div class="qb"><button class="btn" id="qAgain" type="button">다시 하기</button><button class="btn" id="qEnd" type="button">종료</button></div></div>`;
+    document.getElementById('qAgain').onclick = startQuiz;
+    document.getElementById('qEnd').onclick = endQuiz;
+    return;
+  }
+  panel.innerHTML = `<div class="qbox"><div class="qh">문제 ${quiz.i + 1} / ${TOTAL_Q} · 점수 ${quiz.score}</div>
+    <div class="qq">${questionHTML()}</div><div class="qf">${quiz.fb}</div>
+    <div class="qb"><button class="btn" id="qSkip" type="button">건너뛰기</button><button class="btn" id="qEnd" type="button">종료</button></div></div>`;
+  document.getElementById('qSkip').onclick = () => reveal('건너뜀');
+  document.getElementById('qEnd').onclick = endQuiz;
+}
+function reveal(msg) {
+  if (quiz.locked) return;
+  const e = D[quiz.ans - 1];
+  quiz.locked = true; quiz.i++;
+  setHide([]);
+  tiles.get(place(e[0]).col + ',' + place(e[0]).row).classList.add('right');
+  quiz.fb = `${msg} — ${e[2]} (${e[1]}, ${e[0]}번)`;
+  renderQuiz(false);
+  panel.querySelector('.qh').textContent = `문제 ${Math.min(quiz.i, TOTAL_Q)} / ${TOTAL_Q} · 점수 ${quiz.score}`;
+  qTimer = setTimeout(nextQ, 1500);
+}
+function answer(n) {
+  if (quiz.locked) return;
+  const t = tiles.get(place(n).col + ',' + place(n).row);
+  if (n === quiz.ans) {
+    if (quiz.tries === 0) quiz.score++;
+    reveal('정답!');
+    return;
+  }
+  quiz.tries++;
+  t.classList.add('wrong');
+  setTimeout(() => t.classList.remove('wrong'), 600);
+  if (quiz.tries >= 3) { reveal('3번 틀려서 정답 공개'); return; }
+  quiz.fb = `아니에요. 다시 찾아보세요 (${quiz.tries}/3)`;
+  panel.querySelector('.qf').textContent = quiz.fb;
+}
+quizBtn.addEventListener('click', () => {
+  if (quiz) { endQuiz(); return; }
+  quizBtn.setAttribute('aria-pressed', 'true');
+  qrangeWrap.hidden = false;
+  startQuiz(); applyFit();
+});
+qrange.addEventListener('change', () => { if (quiz) startQuiz(); });
+
+// 테마 전환 (프로젝터용)
+const root = document.documentElement;
+document.getElementById('theme').addEventListener('click', () => {
+  const dark = root.dataset.theme
+    ? root.dataset.theme === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+});
+</script>
+</body>
+</html>
